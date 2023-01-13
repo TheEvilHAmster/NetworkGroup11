@@ -3,16 +3,20 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class TimeKeeper : MonoBehaviour
 {
     public float TimeBrr = 0;
+    public float TotalTime = 0;
     public float IncreaseInDifficultyInterval = 5;
     public bool startTimer = false;
     private bool flag = false;
     public int difficulty = 0;
     private float timer = 0;
     private bool timerOn = false;
+
+    [SerializeField] private UnityEvent TimerTrigger;
 
     void Start()
     {
@@ -21,6 +25,7 @@ public class TimeKeeper : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        TotalTime = Time.time;
         if (startTimer)
         {
             TimeBrr += Time.deltaTime;
@@ -62,6 +67,7 @@ public class TimeKeeper : MonoBehaviour
     private void IncreaseDifficulty()
     {
         difficulty++;
+        TimerTrigger.Invoke();
     }
 
 
