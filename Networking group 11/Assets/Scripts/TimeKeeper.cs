@@ -6,18 +6,16 @@ using UnityEngine;
 
 public class TimeKeeper : MonoBehaviour
 {
-    private Time time;
-    private TimeKeeper timeKeeper;
-    private float TimeBrr = 0;
-    private double TimeBRRRRR = 0;
-    private float IncreaseInDifficultyInterval = 5;
-    private bool startTimer = false;
+    public float TimeBrr = 0;
+    public float IncreaseInDifficultyInterval = 5;
+    public bool startTimer = false;
     private bool flag = false;
-    private int difficulty = 0;
+    public int difficulty = 0;
+    private float timer = 0;
+    private bool timerOn = false;
 
     void Start()
     {
-        
     }
 
     // Update is called once per frame
@@ -26,25 +24,44 @@ public class TimeKeeper : MonoBehaviour
         if (startTimer)
         {
             TimeBrr += Time.deltaTime;
-            TimeBRRRRR += Time.deltaTime;
         }
 
-        if ((int)IncreaseInDifficultyInterval % (int)TimeBrr != 0 && !flag)
+        if ((((int)TimeBrr % (int)IncreaseInDifficultyInterval)  != 0) && !flag)
         {
             flag = true;
         }
-        if ((int)IncreaseInDifficultyInterval % (int)TimeBrr == 0 && flag)
+
+        if ((((int)TimeBrr % (int)IncreaseInDifficultyInterval) == 0) && flag)
         {
             flag = false;
             IncreaseDifficulty();
         }
-        
+
+        if (timerOn)
+        {
+            timer -= Time.deltaTime;
+            if (timer == 0)
+            {
+                timerOn = false;
+                TimerDone();
+            }
+        }
     }
 
+    private void TimerDone()
+    {
+        throw new NotImplementedException();
+    }
+
+    void Timer(float _timer)
+    {
+        timer = _timer;
+        timerOn = true;
+    }
 
     private void IncreaseDifficulty()
     {
-        throw new NotImplementedException();
+        difficulty++;
     }
 
 
