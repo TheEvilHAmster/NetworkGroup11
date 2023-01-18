@@ -25,7 +25,5 @@ public class PlayerMovement : MonoBehaviour
 
             spriteRenderer.color = Color.green;
         }
-
-        
     }
 }

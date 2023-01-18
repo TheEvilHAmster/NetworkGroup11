@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Alteruna;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -28,35 +29,7 @@ public class ProjectileCoordinator : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-            ProjectileData projectileData;
-            {
-                projectileData.origin = transform.position;
-                projectileData.velocity = Vector3.forward * 2;
-                projectileData.projectileType = ProjectileType.Linear;
-                projectileData.lifeTime = 9;
-            }
-            ShootShotgun(projectileData, 70, 6);
-        }
-
-        if (Input.GetKeyDown(KeyCode.G))
-        {
-            ProjectileData projectileData;
-            {
-                projectileData.origin = transform.position;
-                projectileData.velocity = Vector3.forward * 2;
-                projectileData.projectileType = ProjectileType.Linear;
-                projectileData.lifeTime = 9;
-            }
-            SphericalShot(projectileData, 40, 5, 10);
-        }
-    }
-    
-
-    private void Spawn()
-    {
-        spawner.Spawn(indexToSpawn, transform.position, transform.rotation);
+        
     }
 
     private void ShootShotgun(ProjectileData projectileData, int count, float angularOffset)
@@ -71,16 +44,14 @@ public class ProjectileCoordinator : MonoBehaviour
         }
     }
 
-    private void SphericalShot(ProjectileData projectileData, int count, int gapWidth, int gapStep)
+    public void SphericalShot(ProjectileData projectileData, int count, int gapWidth, int gapStep)
     {
         float speed = projectileData.velocity.magnitude;
-        
-        int gapCount = gapStep < 1 ? 0 : count / (gapStep + gapWidth); 
-        
+
         float angularOffset = 360 / count;
         
-        Vector3 normalizedVelocity = Vector3.forward;
-        Vector3 axis = Vector3.Cross(normalizedVelocity, Vector3.right);
+        Vector3 normalizedVelocity = Vector3.right;
+        Vector3 axis = Vector3.Cross(normalizedVelocity, Vector3.up);
         
         for (int i = 0; i < count; i++)
         {
@@ -97,7 +68,7 @@ public class ProjectileCoordinator : MonoBehaviour
     }
     private void Shoot(ProjectileData projectileData)
     {
-        Projectile projectile = spawner.Spawn(indexToSpawn, projectileData.origin, transform.rotation).GetComponent<Projectile>();
+        Projectile projectile = spawner.Spawn(indexToSpawn, projectileData.origin, transform.rotation, new Vector3(0.3f, 0.3f, 0.3f)).GetComponent<Projectile>();
         projectile.Shoot(projectileData.origin, projectileData.velocity, projectileData.lifeTime);
     }
 }
