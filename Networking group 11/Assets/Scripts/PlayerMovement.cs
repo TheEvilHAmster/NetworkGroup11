@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Alteruna;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -8,14 +10,14 @@ public class PlayerMovement : MonoBehaviour
 
     private Alteruna.Avatar avatar;
     private SpriteRenderer spriteRenderer;
-
+    private Spawner spawner;
+    
     void Start()
     {
         avatar = GetComponent<Alteruna.Avatar>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-        
+        spawner = GameObject.FindWithTag("NetworkManager").GetComponent<Spawner>();
     }
-
     
     void Update()
     {

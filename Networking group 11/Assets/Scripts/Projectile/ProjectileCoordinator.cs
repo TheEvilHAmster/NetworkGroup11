@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Alteruna;
 using Unity.VisualScripting;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public enum ProjectileType
 {
@@ -12,13 +13,11 @@ public enum ProjectileType
 }
 public class ProjectileCoordinator : MonoBehaviour
 {
-    [SerializeField] private Alteruna.Avatar avatar;
     [SerializeField] private Alteruna.Spawner spawner;
-    [SerializeField] private int indexToSpawn = 0;
+    [SerializeField] private Projectile projectilePrefab;
     private void Awake()
     {
-        avatar = GetComponent<Alteruna.Avatar>();
-        spawner = GameObject.FindWithTag("NetworkManager").GetComponent<Alteruna.Spawner>();
+        spawner = GameObject.FindWithTag("NetworkManager").GetComponent<Spawner>();
         Projectile.OnLifeTimeExpired += DestroyProjectile;
     }
 
@@ -26,12 +25,6 @@ public class ProjectileCoordinator : MonoBehaviour
     {
         spawner.Despawn(projectile.gameObject);
     }
-
-    private void Update()
-    {
-        
-    }
-
     private void ShootShotgun(ProjectileData projectileData, int count, float angularOffset)
     {
         float speed = projectileData.velocity.magnitude;
@@ -44,7 +37,7 @@ public class ProjectileCoordinator : MonoBehaviour
         }
     }
 
-    public void SphericalShot(ProjectileData projectileData, int count, int gapWidth, int gapStep)
+    public void SphericalShot(ProjectileData projectileData, int count)
     {
         float speed = projectileData.velocity.magnitude;
 
@@ -59,6 +52,29 @@ public class ProjectileCoordinator : MonoBehaviour
             Shoot(projectileData);
         }
     }
+    public void SquareShot(ProjectileData projectileData, int count)
+    {
+        float speed = projectileData.velocity.magnitude;
+
+        float angularOffset = 360 / count;
+        
+        Vector3 normalizedVelocity = Vector3.right;
+        Vector3 axis = Vector3.Cross(normalizedVelocity, Vector3.up);
+
+        Vector3[] directions = { Vector3.up, Vector3.right, Vector3.down, Vector3.left };
+        int dividedCount = count / 2;
+        float offset = 0.25f;
+        for (int i = 0; i < directions.Length; i++)
+        {
+            for (int y = 0; y < dividedCount; y++)
+            {
+                projectileData.velocity = directions[i] * speed;
+                Vector3 offsetVector = directions[(i + 1) % directions.Length ];
+                projectileData.origin += -offsetVector * offset * (dividedCount - y) + offsetVector * y * offset;
+                Shoot(projectileData);
+            }
+        }
+    }
     private void ShootProjectiles(ProjectileData[] projectileData)
     {
         for (int i = 0; i < projectileData.Length; i++)
@@ -66,9 +82,15 @@ public class ProjectileCoordinator : MonoBehaviour
             Shoot(projectileData[i]);
         }
     }
+    //private void Shoot(ProjectileData projectileData)
+    //{
+    //    Projectile projectile = spawner.Spawn(indexToSpawn, projectileData.origin, transform.rotation, new Vector3(0.3f, 0.3f, 0.3f)).GetComponent<Projectile>();
+    //    projectile.Shoot(projectileData.origin, projectileData.velocity, projectileData.lifeTime);
+    //}
+    
     private void Shoot(ProjectileData projectileData)
     {
-        Projectile projectile = spawner.Spawn(indexToSpawn, projectileData.origin, transform.rotation, new Vector3(0.3f, 0.3f, 0.3f)).GetComponent<Projectile>();
+        Projectile projectile = Instantiate(projectilePrefab, projectileData.origin, transform.rotation).GetComponent<Projectile>();
         projectile.Shoot(projectileData.origin, projectileData.velocity, projectileData.lifeTime);
     }
 }

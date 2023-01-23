@@ -9,34 +9,38 @@ public class BossBehavior : MonoBehaviour
 {
     private Vector2 topLeftCorner = new(0, 0);
     private Vector2 bottomRightCorner = new (20f, -8f);
-
-    private Vector2 targetLocation = new Vector2(10, -4);
+    private Vector2 targetLocation = new (10, -4);
+    
     private float speed = 2f;
-
-    private float timePassed = 0;
-    private float timeMoved = 0;
-    private float moveTime = 1f;
-    private float waitTime = 0f;
-
+    
+    private double moveTime = 2f;
+    private double waitTime = 1f;
+    private double newTimeStamp;
+    
     private Multiplayer multiplayer;
-
+    
     [SerializeField] private ProjectileCoordinator projectileCoordinator;
+
+    private void Start()
+    {
+        Random.InitState(500);
+        newTimeStamp = moveTime + waitTime + GameMode.gameStopWatch.Elapsed.TotalSeconds;
+        targetLocation = GetRandomLocation();
+    }
+
     void Update()
     {
-        timePassed += Time.deltaTime;
-        
         MoveTowardsLocation(targetLocation);
         UpdateTargetLocation();
-        
     }
 
     private void UpdateTargetLocation()
     {
-        timeMoved += Time.deltaTime / moveTime;
-        if (timeMoved > moveTime + waitTime)
+        if ((int) newTimeStamp - GameMode.gameStopWatch.Elapsed.TotalSeconds <= 0)
         {
+            newTimeStamp = moveTime + waitTime + GameMode.gameStopWatch.Elapsed.TotalSeconds;
+            
             targetLocation = GetRandomLocation();
-            timeMoved = 0;
             ProjectileData projectileData;
             {
                 projectileData.origin = transform.position;
@@ -44,12 +48,26 @@ public class BossBehavior : MonoBehaviour
                 projectileData.projectileType = ProjectileType.Linear;
                 projectileData.lifeTime = 9;
             }
-            projectileCoordinator.SphericalShot(projectileData, 30, 5, 10);
+            ShootRandomShot(projectileData);
+        }
+    }
+
+    private void ShootRandomShot(ProjectileData projectileData)
+    {
+        int weapon = Random.Range(0, 2);
+        switch (weapon)
+        {
+            case 0 :
+            projectileCoordinator.SquareShot(projectileData, 2 * GameMode.difficulty);
+                break;
+            case 1 :
+            projectileCoordinator.SphericalShot(projectileData, 3 * GameMode.difficulty);
+            break;
         }
     }
     private void MoveTowardsLocation(Vector3 location)
     {
-        float t = Mathf.Clamp( timeMoved, 0f, 1f);
+        float t = Mathf.Clamp( ((float)(GameMode.gameStopWatch.Elapsed.TotalSeconds - newTimeStamp + waitTime)), 0f, 1f);
         transform.position = Vector3.Lerp(transform.position, location, EaseInOutCirc(t));
     }
 
