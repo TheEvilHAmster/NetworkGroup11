@@ -21,13 +21,18 @@ public class BossBehavior : MonoBehaviour
     private Multiplayer multiplayer;
 
     [SerializeField] private ProjectileCoordinator projectileCoordinator;
+
+    private void Start()
+    {
+        Random.InitState(10);
+    }
+
     void Update()
     {
         timePassed += Time.deltaTime;
         
         MoveTowardsLocation(targetLocation);
         UpdateTargetLocation();
-        
     }
 
     private void UpdateTargetLocation()
@@ -44,7 +49,7 @@ public class BossBehavior : MonoBehaviour
                 projectileData.projectileType = ProjectileType.Linear;
                 projectileData.lifeTime = 9;
             }
-            projectileCoordinator.SphericalShot(projectileData, 30, 5, 10);
+            //projectileCoordinator.SphericalShot(projectileData, 30, 5, 10);
         }
     }
     private void MoveTowardsLocation(Vector3 location)

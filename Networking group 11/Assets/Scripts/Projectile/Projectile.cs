@@ -36,20 +36,19 @@ public class Projectile : Synchronizable
 
     private void Update()
     {
+        UpdateSyncedProperties();
+        UpdateMovement();
+        UpdateLifeTime();
+        base.SyncUpdate();
+    }
+
+    private void UpdateSyncedProperties()
+    {
         if (velocity != oldVelocity)
         {
             oldVelocity = velocity;
             Commit();
         }
-        base.SyncUpdate();
-        UpdateSyncedProperties();
-        UpdateMovement();
-        UpdateLifeTime();
-    }
-
-    private void UpdateSyncedProperties()
-    {
-        
     }
     protected void UpdateMovement()
     {

@@ -18,7 +18,7 @@ public class ProjectileCoordinator : MonoBehaviour
     private void Awake()
     {
         avatar = GetComponent<Alteruna.Avatar>();
-        spawner = GameObject.FindWithTag("NetworkManager").GetComponent<Alteruna.Spawner>();
+        spawner = GameObject.FindWithTag("NetworkManager").GetComponent<Spawner>();
         Projectile.OnLifeTimeExpired += DestroyProjectile;
     }
 
