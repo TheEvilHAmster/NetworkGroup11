@@ -13,8 +13,9 @@ public class Projectile : MonoBehaviour
     {
         transform.position = origin;
         this.velocity = velocity;
-        
-      //  transform.rotation = Quaternion.LookRotation(velocity, Vector3.forward);
+        enabled = true;
+        gameObject.SetActive(true);
+        //transform.rotation = Quaternion.LookRotation(velocity, Vector3.forward);
         this.lifeTime = lifeTime;
     }
     private void Start()

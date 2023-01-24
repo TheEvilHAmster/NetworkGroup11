@@ -90,7 +90,7 @@ public class ProjectileCoordinator : MonoBehaviour
     
     private void Shoot(ProjectileData projectileData)
     {
-        Projectile projectile = Instantiate(projectilePrefab, projectileData.origin, transform.rotation).GetComponent<Projectile>();
+        Projectile projectile = ProjectilePool.Instance.GetObject();
         projectile.Shoot(projectileData.origin, projectileData.velocity, projectileData.lifeTime);
     }
 }

@@ -41,7 +41,7 @@ public class Respawn : MonoBehaviour
     }
     public void Die()
     {
-        transform.position = new Vector3(0, 100, 0); //Goes to code heaven
+        transform.position = new Vector3(0, 5000, 0); //Goes to code heaven
         timeLeft = GameMode.gameStopWatch.Elapsed.TotalSeconds;
         dead = true;
     }

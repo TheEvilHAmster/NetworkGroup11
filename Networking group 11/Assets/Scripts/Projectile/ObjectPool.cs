@@ -26,9 +26,13 @@ using UnityEngine;
 
         private void AddObjects(int count)
         {
-            var newObject = GameObject.Instantiate(prefab);
-            newObject.gameObject.SetActive(false);
-            objects.Enqueue(newObject);
+            for (int i = 0; i < count; i++)
+            {
+                var newObject = Instantiate(prefab);
+                newObject.gameObject.SetActive(false);
+                objects.Enqueue(newObject);
+            }
+            
         }
     }
 
