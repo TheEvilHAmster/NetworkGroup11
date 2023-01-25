@@ -6,13 +6,14 @@ using UnityEngine;
     public abstract class ObjectPool<T> : MonoBehaviour where T : Component
     {
         [SerializeField] private T prefab;
+        [SerializeField] private int warmupObjects = 0;
         public static ObjectPool<T> Instance { get; set; }
         private Queue<T> objects = new();
-
+        
         private void Awake()
         {
             Instance = this;
-            AddObjects(150);
+            AddObjects(warmupObjects);
         }
 
         public T GetObject()

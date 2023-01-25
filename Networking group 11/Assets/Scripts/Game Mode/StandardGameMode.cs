@@ -17,26 +17,25 @@ public class StandardGameMode : GameMode
     {
         enemySpawner = GetComponent<BossSpawner>();
         difficultyIncreaseTimeStamp = gameStopWatch.Elapsed.TotalSeconds;
+        StartCoroutine(StartGame());
     }
 
+    IEnumerator StartGame()
+    {
+        yield return new WaitForSeconds(startGameSeconds);
+        gameStopWatch.Start();
+        SpawnEnemy();
+    }
     private void Update()
     {
-        timeTilGameStart += Time.deltaTime;
-        if (timeTilGameStart > startGameSeconds)
-        {
-            gameStopWatch.Start();
-            enabled = false;
-            SpawnEnemy();
-        }
-        
         if (difficultyIncreaseTimeStamp - gameStopWatch.Elapsed.TotalSeconds < 0.0)
         {
-            difficulty++;
+            GameMode.difficulty++;
             Debug.Log(difficulty);
             difficultyIncreaseTimeStamp = gameStopWatch.Elapsed.TotalSeconds + difficultyIncreaseFrequency;
         }
     }
-
+    
     private void SpawnEnemy()
     {
         enemySpawner.Spawn();

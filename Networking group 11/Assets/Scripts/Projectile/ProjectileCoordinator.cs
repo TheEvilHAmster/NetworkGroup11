@@ -15,6 +15,9 @@ public class ProjectileCoordinator : MonoBehaviour
 {
     [SerializeField] private Alteruna.Spawner spawner;
     [SerializeField] private Projectile projectilePrefab;
+    
+    private Vector2 topLeftCorner = new(-0.59f, 0.52f);
+    private Vector2 bottomRightCorner = new (20.7f, -9.5f);
     private void Awake()
     {
         spawner = GameObject.FindWithTag("NetworkManager").GetComponent<Spawner>();
@@ -40,8 +43,8 @@ public class ProjectileCoordinator : MonoBehaviour
     public void SphericalShot(ProjectileData projectileData, int count)
     {
         float speed = projectileData.velocity.magnitude;
-
-        float angularOffset = 360 / count;
+        count = Mathf.Clamp(count, 0, 360);
+        float angularOffset = 360f / count;
         
         Vector3 normalizedVelocity = Vector3.right;
         Vector3 axis = Vector3.Cross(normalizedVelocity, Vector3.up);
@@ -52,27 +55,42 @@ public class ProjectileCoordinator : MonoBehaviour
             Shoot(projectileData);
         }
     }
-    public void SquareShot(ProjectileData projectileData, int count)
+
+    public void RapidSphericalShot(ProjectileData projectileData, int count)
+    {
+        StartCoroutine(RapidFireSphere(projectileData, count, 1.25f));
+    }
+    private IEnumerator RapidFireSphere(ProjectileData projectileData, int count, float totalDelay)
     {
         float speed = projectileData.velocity.magnitude;
-
-        float angularOffset = 360 / count;
+        count = Mathf.Clamp(count, 0, 360);
+        float angularOffset = 360f / count;
         
         Vector3 normalizedVelocity = Vector3.right;
         Vector3 axis = Vector3.Cross(normalizedVelocity, Vector3.up);
-
-        Vector3[] directions = { Vector3.up, Vector3.right, Vector3.down, Vector3.left };
-        int dividedCount = count / 2;
-        float offset = 0.25f;
-        for (int i = 0; i < directions.Length; i++)
+        float delay = totalDelay / count;
+        for (int i = 0; i < count; i++)
         {
-            for (int y = 0; y < dividedCount; y++)
-            {
-                projectileData.velocity = directions[i] * speed;
-                Vector3 offsetVector = directions[(i + 1) % directions.Length ];
-                projectileData.origin += -offsetVector * offset * (dividedCount - y) + offsetVector * y * offset;
-                Shoot(projectileData);
-            }
+            projectileData.velocity = Quaternion.AngleAxis(angularOffset * i, axis) * normalizedVelocity * speed;
+            yield return new WaitForSeconds(delay);
+            Shoot(projectileData);
+        }
+    }
+    public void RapidFireShot(ProjectileData projectileData, int count, Vector3 direction)
+    {
+        projectileData.velocity = direction * projectileData.velocity.magnitude;
+        StartCoroutine(Fire(projectileData, count, 0.55f));
+    }
+
+    private IEnumerator Fire(ProjectileData projectileData, int count, float totalDelay)
+    {
+        float delay = totalDelay / count;
+        
+        for (int i = 0; i < count; i++)
+        {
+            yield return new WaitForSeconds(delay);
+            Shoot(projectileData);
+            
         }
     }
     private void ShootProjectiles(ProjectileData[] projectileData)
@@ -82,15 +100,26 @@ public class ProjectileCoordinator : MonoBehaviour
             Shoot(projectileData[i]);
         }
     }
-    //private void Shoot(ProjectileData projectileData)
-    //{
-    //    Projectile projectile = spawner.Spawn(indexToSpawn, projectileData.origin, transform.rotation, new Vector3(0.3f, 0.3f, 0.3f)).GetComponent<Projectile>();
-    //    projectile.Shoot(projectileData.origin, projectileData.velocity, projectileData.lifeTime);
-    //}
+    private Vector2 GetRandomLocation()
+    {
+        return new Vector2(Random.Range(topLeftCorner.x, bottomRightCorner.x),
+            Random.Range(bottomRightCorner.y, topLeftCorner.y));
+    }
     
     private void Shoot(ProjectileData projectileData)
     {
-        Projectile projectile = ProjectilePool.Instance.GetObject();
-        projectile.Shoot(projectileData.origin, projectileData.velocity, projectileData.lifeTime);
+        switch (projectileData.projectileType)
+        {
+            case ProjectileType.Linear :
+                Projectile projectile = ProjectilePool.Instance.GetObject();
+                projectile.Shoot(projectileData.origin, projectileData.velocity, projectileData.lifeTime);
+                break;
+            case ProjectileType.Homing :
+                Rocket rocket = RocketPool.Instance.GetObject();
+                rocket.Shoot(projectileData.origin, projectileData.velocity, projectileData.lifeTime);
+                rocket.SetTarget(GetRandomLocation());
+                break;
+        }
+        
     }
 }

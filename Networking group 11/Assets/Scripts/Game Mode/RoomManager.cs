@@ -12,17 +12,17 @@ using Avatar = UnityEngine.Avatar;
 public class RoomManager : MonoBehaviour
 {
     [SerializeField] private Multiplayer multiplayer;
-    [SerializeField] private int minPlayers = 2;
+    [SerializeField] private int minPlayers = 1;
     [SerializeField] private GameObject roomPrefab;
     [SerializeField] private GameObject startGameButton;
 
     [SerializeField] private StandardGameMode gameMode;
     private int playersOnline;
     private bool gameStarted;
-    
+    public static readonly List<PlayerMovement> players = new List<PlayerMovement>();
     void Start()
     {
-        multiplayer.RegisterRemoteProcedure("GameStarted", SendGameStarted);
+        multiplayer.RegisterRemoteProcedure("GameStarted", ReceiveGameStarted);
         startGameButton.SetActive(false);
         multiplayer.RoomJoined.AddListener(SetPlayers);
     }
@@ -30,16 +30,19 @@ public class RoomManager : MonoBehaviour
     {
         startGameButton.SetActive(true);
     }
-    private void SendGameStarted(ushort fromUser, ProcedureParameters parameters, uint callId, ITransportStreamReader processor)
+    private void ReceiveGameStarted(ushort fromUser, ProcedureParameters parameters, uint callId, ITransportStreamReader processor)
     {
-        parameters.Get("time", out string time);
-        Debug.Log(time);
-        DateTime networkedTime = DateTime.ParseExact(time, "yyyy.MM.dd HH:mm:ss:fff", CultureInfo.InvariantCulture);
-        DateTime myTime = GetNetworkTime();
-        TimeSpan timeSpan = myTime - networkedTime;
-        float deltaTime = (float)timeSpan.TotalMilliseconds / 1000f;
-        GameMode.timeTilGameStart += deltaTime;
-        StartGame();
+        if (!gameStarted)
+        {
+            parameters.Get("time", out string time);
+            Debug.Log(time);
+            DateTime networkedTime = DateTime.ParseExact(time, "yyyy.MM.dd HH:mm:ss:fff", CultureInfo.InvariantCulture);
+            DateTime myTime = GetNetworkTime();
+            TimeSpan timeSpan = myTime - networkedTime;
+            float deltaTime = (float)timeSpan.TotalMilliseconds / 1000f;
+            GameMode.timeTilGameStart += deltaTime;
+            StartGame();
+        }
     }
     private void StartGame()
     {
@@ -47,7 +50,9 @@ public class RoomManager : MonoBehaviour
         roomPrefab.SetActive(false);
         startGameButton.SetActive(false);
         gameStarted = true;
+        players.AddRange(FindObjectsOfType<PlayerMovement>());
         Instantiate(gameMode, transform.position, Quaternion.identity);
+        players.Sort(SortPlayersByInstanceID);
     }
     public void OnButtonPress()
     {
@@ -65,8 +70,13 @@ public class RoomManager : MonoBehaviour
             parameters.Set("time", dateTime.ToString("yyyy.MM.dd HH:mm:ss:fff"));
             Debug.Log("Minutes " + dateTime.Minute + " Seconds: " + dateTime.Second + " Milliseconds: " + dateTime.Millisecond);
             multiplayer.InvokeRemoteProcedure("GameStarted", UserId.All, parameters);
+            
             StartGame();
         }
+    }
+    
+    public static int SortPlayersByInstanceID(PlayerMovement o1, PlayerMovement o2) {
+        return o1.GetInstanceID().CompareTo(o2.GetInstanceID());
     }
     public static DateTime GetNetworkTime()
     {

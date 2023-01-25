@@ -7,8 +7,8 @@ using Random = UnityEngine.Random;
 
 public class BossBehavior : MonoBehaviour
 {
-    private Vector2 topLeftCorner = new(0, 0);
-    private Vector2 bottomRightCorner = new (20f, -8f);
+    private Vector2 topLeftCorner = new(0.7f, -0.8f);
+    private Vector2 bottomRightCorner = new (19.25f, -8.1f);
     private Vector2 targetLocation = new (10, -4);
     
     private float speed = 2f;
@@ -23,7 +23,7 @@ public class BossBehavior : MonoBehaviour
 
     private void Start()
     {
-        Random.InitState(500);
+        Random.InitState(120);
         newTimeStamp = moveTime + waitTime + GameMode.gameStopWatch.Elapsed.TotalSeconds;
         targetLocation = GetRandomLocation();
     }
@@ -44,9 +44,10 @@ public class BossBehavior : MonoBehaviour
             ProjectileData projectileData;
             {
                 projectileData.origin = transform.position;
-                projectileData.velocity = Vector3.right * 1;
+                projectileData.velocity = Vector2.up * 1;
                 projectileData.projectileType = ProjectileType.Linear;
                 projectileData.lifeTime = 9;
+                projectileData.target = null;
             }
             ShootRandomShot(projectileData);
         }
@@ -54,15 +55,30 @@ public class BossBehavior : MonoBehaviour
 
     private void ShootRandomShot(ProjectileData projectileData)
     {
-        int weapon = Random.Range(0, 2);
+        int weaponsUnlocked = Mathf.Clamp( GameMode.difficulty / 3, 0, 5);
+        int weapon = Random.Range(0, weaponsUnlocked);
         switch (weapon)
         {
             case 0 :
-            projectileCoordinator.SquareShot(projectileData, 2 * GameMode.difficulty);
+                projectileCoordinator.SphericalShot(projectileData, (int) (1f * GameMode.difficulty));
                 break;
             case 1 :
-            projectileCoordinator.SphericalShot(projectileData, 3 * GameMode.difficulty);
-            break;
+                projectileCoordinator.RapidSphericalShot(projectileData, (int) (1.5f * GameMode.difficulty));
+                break;
+            case 2 :
+                projectileData.projectileType = ProjectileType.Homing;
+                
+                projectileCoordinator.RapidFireShot(projectileData, (int) (0.35f * GameMode.difficulty), Vector2.up);
+                break;
+            case 3 :
+                projectileData.projectileType = ProjectileType.Homing;
+                projectileCoordinator.RapidSphericalShot(projectileData, (int) (0.35f * GameMode.difficulty));
+                break;
+            case 4 :
+                projectileData.projectileType = ProjectileType.Homing;
+                
+                projectileCoordinator.RapidFireShot(projectileData, (int) (0.45f * GameMode.difficulty), Vector2.up);
+                break;
         }
     }
     private void MoveTowardsLocation(Vector3 location)
