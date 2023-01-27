@@ -16,10 +16,14 @@ public class RoomManager : MonoBehaviour
     [SerializeField] private GameObject roomPrefab;
     [SerializeField] private GameObject startGameButton;
 
-    [SerializeField] private StandardGameMode gameMode;
+    [SerializeField] private StandardGameMode gameModePrefab;
+    [SerializeField] private GameObject loseUI;
+    [SerializeField] private GameObject winUI;
     private int playersOnline;
     private bool gameStarted;
     public static readonly List<PlayerMovement> players = new List<PlayerMovement>();
+
+    private StandardGameMode gameMode;
     void Start()
     {
         multiplayer.RegisterRemoteProcedure("GameStarted", ReceiveGameStarted);
@@ -29,6 +33,11 @@ public class RoomManager : MonoBehaviour
     private void SetPlayers(Multiplayer arg0, Room arg1, User arg2)
     {
         startGameButton.SetActive(true);
+    }
+
+    public void CheckLose()
+    {
+        gameMode.CheckLose();
     }
     private void ReceiveGameStarted(ushort fromUser, ProcedureParameters parameters, uint callId, ITransportStreamReader processor)
     {
@@ -51,11 +60,18 @@ public class RoomManager : MonoBehaviour
         startGameButton.SetActive(false);
         gameStarted = true;
         players.AddRange(FindObjectsOfType<PlayerMovement>());
-        Instantiate(gameMode, transform.position, Quaternion.identity);
+        gameMode = Instantiate(gameModePrefab, transform.position, Quaternion.identity);
         players.Sort(SortPlayersByInstanceID);
+        loseUI.SetActive(false);
+        winUI.SetActive(false);
+        for (int i = 0; i < players.Count; i++)
+        {
+            players[i].GetComponent<Respawn>().Revive();
+        }
     }
     public void OnButtonPress()
     {
+        Debug.Log("pressed");
         if (!gameStarted)
         {
             TryStartGame();
@@ -75,6 +91,23 @@ public class RoomManager : MonoBehaviour
         }
     }
     
+    public void ResetGame()
+    {
+        gameStarted = false;
+        roomPrefab.SetActive(true);
+        startGameButton.SetActive(false);
+    }
+    public void Lose()
+    {
+        loseUI.SetActive(true);
+        ResetGame();
+    }
+
+    public void Win()
+    {
+        ResetGame();
+        winUI.SetActive(true);
+    }
     public static int SortPlayersByInstanceID(PlayerMovement o1, PlayerMovement o2) {
         return o1.GetInstanceID().CompareTo(o2.GetInstanceID());
     }

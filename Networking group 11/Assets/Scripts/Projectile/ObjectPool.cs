@@ -24,7 +24,11 @@ using UnityEngine;
             }
             return objects.Dequeue();
         }
-
+        public void ReturnToPool(T returnedObject) 
+        {
+            returnedObject.gameObject.SetActive(false);
+            objects.Enqueue(returnedObject);
+        }
         private void AddObjects(int count)
         {
             for (int i = 0; i < count; i++)

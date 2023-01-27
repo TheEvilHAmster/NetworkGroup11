@@ -45,20 +45,28 @@ public class ProjectileCoordinator : MonoBehaviour
         float speed = projectileData.velocity.magnitude;
         count = Mathf.Clamp(count, 0, 360);
         float angularOffset = 360f / count;
-        
+        int gapFrequency = (int)(count * 0.1f);
+        int shotsBetweenGap = 0;
+        int gapSize = (int)(count * 0.03f);
         Vector3 normalizedVelocity = Vector3.right;
         Vector3 axis = Vector3.Cross(normalizedVelocity, Vector3.up);
         
         for (int i = 0; i < count; i++)
         {
+            shotsBetweenGap++;
+            if (shotsBetweenGap >= gapFrequency)
+            {
+                shotsBetweenGap = 0;
+                i += gapSize;
+            }
             projectileData.velocity = Quaternion.AngleAxis(angularOffset * i, axis) * normalizedVelocity * speed;
             Shoot(projectileData);
         }
     }
 
-    public void RapidSphericalShot(ProjectileData projectileData, int count)
+    public void RapidSphericalShot(ProjectileData projectileData, int count, float delay)
     {
-        StartCoroutine(RapidFireSphere(projectileData, count, 1.25f));
+        StartCoroutine(RapidFireSphere(projectileData, count, delay));
     }
     private IEnumerator RapidFireSphere(ProjectileData projectileData, int count, float totalDelay)
     {
@@ -69,8 +77,47 @@ public class ProjectileCoordinator : MonoBehaviour
         Vector3 normalizedVelocity = Vector3.right;
         Vector3 axis = Vector3.Cross(normalizedVelocity, Vector3.up);
         float delay = totalDelay / count;
+        int gapFrequency = (int)(count * 0.1f);
+        int shotsBetweenGap = 0;
+        int gapSize = (int)(count * 0.015f);
         for (int i = 0; i < count; i++)
         {
+            shotsBetweenGap++;
+            if (shotsBetweenGap >= gapFrequency)
+            {
+                shotsBetweenGap = 0;
+                i += gapSize;
+            }
+            projectileData.velocity = Quaternion.AngleAxis(angularOffset * i, axis) * normalizedVelocity * speed;
+            yield return new WaitForSeconds(delay);
+            Shoot(projectileData);
+        }
+    }
+
+    public void RapidSphericalShotGaps(ProjectileData projectileData, int count, float delay)
+    {
+        StartCoroutine(RapidFireSphereGaps(projectileData, count, delay));
+    }
+    private IEnumerator RapidFireSphereGaps(ProjectileData projectileData, int count, float totalDelay)
+    {
+        float speed = projectileData.velocity.magnitude;
+        count = Mathf.Clamp(count, 0, 360);
+        float angularOffset = 360f / count;
+        
+        Vector3 normalizedVelocity = Vector3.right;
+        Vector3 axis = Vector3.Cross(normalizedVelocity, Vector3.up);
+        float delay = totalDelay / count;
+        int gapFrequency = (int)(count * 0.33f);
+        int shotsBetweenGap = 0;
+        int gapSize = (int)(count * 0.03f);
+        for (int i = 0; i < count; i++)
+        {
+            shotsBetweenGap++;
+            if (shotsBetweenGap >= gapFrequency)
+            {
+                shotsBetweenGap = 0;
+                i += gapSize;
+            }
             projectileData.velocity = Quaternion.AngleAxis(angularOffset * i, axis) * normalizedVelocity * speed;
             yield return new WaitForSeconds(delay);
             Shoot(projectileData);

@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections;
 using Alteruna;
 using UnityEngine;
 
 public class Projectile : MonoBehaviour
 {
-    [SerializeField] private float lifeTime = 20f;
+    [SerializeField] protected float lifeTime = 20f;
     
     protected Vector3 velocity;
     
@@ -21,18 +22,28 @@ public class Projectile : MonoBehaviour
         this.lifeTime = lifeTime;
         
         StartProjectile();
+        
     }
     private void Start()
     {
-        Destroy(gameObject, lifeTime);
-        
-        transform.localScale = new Vector3(0.1f, 0.1f, 1f);
-        
+        transform.localScale = new Vector3(0.07f, 0.07f, 1f);
     }
 
     protected virtual void StartProjectile()
     {
         transform.position += velocity * ProjectileOffset;
+        ReturnToObjectPool(lifeTime);
+    }
+
+    protected void ReturnToObjectPool(float delay = 0f)
+    {
+        StartCoroutine( ReturnToPoolDelay(delay));
+    }
+
+    protected virtual IEnumerator ReturnToPoolDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        ProjectilePool.Instance.ReturnToPool(this);
     }
     private void Update()
     {

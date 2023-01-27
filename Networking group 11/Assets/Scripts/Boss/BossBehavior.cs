@@ -16,7 +16,7 @@ public class BossBehavior : MonoBehaviour
     private double moveTime = 2f;
     private double waitTime = 1f;
     private double newTimeStamp;
-    
+    private float reloadTime = 0;
     private Multiplayer multiplayer;
     
     [SerializeField] private ProjectileCoordinator projectileCoordinator;
@@ -24,7 +24,7 @@ public class BossBehavior : MonoBehaviour
     private void Start()
     {
         Random.InitState(120);
-        newTimeStamp = moveTime + waitTime + GameMode.gameStopWatch.Elapsed.TotalSeconds;
+        newTimeStamp = moveTime + waitTime + GameMode.gameStopWatch.Elapsed.TotalSeconds + reloadTime;
         targetLocation = GetRandomLocation();
     }
 
@@ -38,48 +38,114 @@ public class BossBehavior : MonoBehaviour
     {
         if ((int) newTimeStamp - GameMode.gameStopWatch.Elapsed.TotalSeconds <= 0)
         {
+            StartCoroutine(Shoot(Random.Range(0.5f, 1.2f)));
             newTimeStamp = moveTime + waitTime + GameMode.gameStopWatch.Elapsed.TotalSeconds;
-            
-            targetLocation = GetRandomLocation();
-            ProjectileData projectileData;
-            {
-                projectileData.origin = transform.position;
-                projectileData.velocity = Vector2.up * 1;
-                projectileData.projectileType = ProjectileType.Linear;
-                projectileData.lifeTime = 9;
-                projectileData.target = null;
-            }
-            ShootRandomShot(projectileData);
         }
     }
 
+    private IEnumerator Shoot(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        targetLocation = GetRandomLocation();
+        ProjectileData projectileData;
+        {
+            projectileData.origin = transform.position;
+            projectileData.velocity = Vector2.up * 1;
+            projectileData.projectileType = ProjectileType.Linear;
+            projectileData.lifeTime = 9;
+            projectileData.target = null;
+        }
+        ShootRandomShot(projectileData);
+        newTimeStamp += reloadTime;
+    }
     private void ShootRandomShot(ProjectileData projectileData)
     {
-        int weaponsUnlocked = Mathf.Clamp( GameMode.difficulty / 3, 0, 5);
+        int weaponsUnlocked = Mathf.Clamp( (int)(GameMode.difficulty / 3f), 0, 10);
         int weapon = Random.Range(0, weaponsUnlocked);
         switch (weapon)
         {
             case 0 :
-                projectileCoordinator.SphericalShot(projectileData, (int) (1f * GameMode.difficulty));
+                projectileCoordinator.SphericalShot(projectileData, (int) (0.7f * GameMode.difficulty));
+                projectileData.lifeTime = 23f;
+                reloadTime = 0.1f;
                 break;
             case 1 :
-                projectileCoordinator.RapidSphericalShot(projectileData, (int) (1.5f * GameMode.difficulty));
+                projectileData.lifeTime = 21f;
+                projectileCoordinator.RapidSphericalShot(projectileData, (int) (1f * GameMode.difficulty), 1.25f);
+                reloadTime = 0.1f;
                 break;
             case 2 :
                 projectileData.projectileType = ProjectileType.Homing;
-                
-                projectileCoordinator.RapidFireShot(projectileData, (int) (0.35f * GameMode.difficulty), Vector2.up);
+                projectileData.lifeTime = 14f;
+                projectileCoordinator.RapidFireShot(projectileData, (int) (0.65f * GameMode.difficulty), Vector2.up);
+                reloadTime = 0.1f;
                 break;
             case 3 :
-                projectileData.projectileType = ProjectileType.Homing;
-                projectileCoordinator.RapidSphericalShot(projectileData, (int) (0.35f * GameMode.difficulty));
+                projectileCoordinator.RapidSphericalShot(projectileData, (int) (0.85f * GameMode.difficulty), 1.15f);
+                projectileData.lifeTime = 21f;
+                reloadTime = 0.6f;
                 break;
             case 4 :
-                projectileData.projectileType = ProjectileType.Homing;
-                
-                projectileCoordinator.RapidFireShot(projectileData, (int) (0.45f * GameMode.difficulty), Vector2.up);
+                reloadTime = 3.5f;
+                projectileData.lifeTime = 21f;
+                StartCoroutine(ChargeShotLinear(projectileData, 1.5f));
+                break;
+            case 5 :
+                projectileData.lifeTime = 13;
+                StartCoroutine(ChargeShotRapidRockets(projectileData, 1));
+                reloadTime = 3f;
+                break;
+            case 6 :
+                projectileData.lifeTime = 13.5f;
+                projectileData.velocity = Vector2.up * 0.55f;
+                StartCoroutine(ChargeShotRocketsSpherical(projectileData, 1.5f));
+                reloadTime = 5f;
+                break;
+            case 7 :
+                projectileData.lifeTime = 12f;
+                StartCoroutine(ChargeShotRapidRockets(projectileData, 2));
+                StartCoroutine(ChargeShotLinear(projectileData, 1.5f));
+                reloadTime = 5f;
+                break;
+            
+            case 8 :
+                projectileData.lifeTime = 16f;
+                StartCoroutine(RapidFireSpherical(projectileData, 1.5f, 3));
+                reloadTime = 2f;
+                break;
+            case 9 :
+                projectileData.lifeTime = 16f;
+                projectileCoordinator.RapidSphericalShotGaps(projectileData, (int) (2f * GameMode.difficulty), 3.25f);
+                reloadTime = 0.9f;
                 break;
         }
+    }
+
+    private IEnumerator ChargeShotLinear(ProjectileData projectileData, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        projectileCoordinator.SphericalShot(projectileData, (int) (1.2f * GameMode.difficulty));
+    }
+    private IEnumerator RapidFireSpherical(ProjectileData projectileData, float delay, int loops)
+    {
+        for (int i = 0; i < loops; i++)
+        {
+            float delayPerLoop = delay / loops;
+            yield return new WaitForSeconds(delayPerLoop);
+            projectileCoordinator.SphericalShot(projectileData, (int) (1f * GameMode.difficulty));
+        }
+    }
+    private IEnumerator ChargeShotRocketsSpherical(ProjectileData projectileData, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        projectileData.projectileType = ProjectileType.Homing;
+        projectileCoordinator.SphericalShot(projectileData, (int) (1.2f * GameMode.difficulty));
+    }
+    private IEnumerator ChargeShotRapidRockets(ProjectileData projectileData, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        projectileData.projectileType = ProjectileType.Homing;
+        projectileCoordinator.RapidFireShot(projectileData, (int) (0.95f * GameMode.difficulty), Vector2.up);
     }
     private void MoveTowardsLocation(Vector3 location)
     {
